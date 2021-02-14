@@ -1,6 +1,7 @@
 import pandas as pd
 from scipy.spatial import KDTree
 import plotly.express as px
+import plotly.subplots as sp
 import math
 
 #test for a commit
@@ -37,13 +38,12 @@ for county in cancerMerged.iterrows():
             except IndexError:
                 print('countyError')
             pollutionRateByCounty[county[1]['fips']][plantType] += result['capacity_mw'] / math.pow(treeResult[0], 2)
-print(pollutionRateByCounty)
 pollutionRateDataframe = pd.DataFrame.from_dict(pollutionRateByCounty).transpose()
 pollutionRateDataframe['fips'] = pollutionRateDataframe.index
-print(pollutionRateDataframe)
 cancerMerged = cancerRates.merge(pollutionRateDataframe, on="fips")
-
-figure = px.scatter_geo(cancerMerged, lat='pclat10', lon='pclon10', size='Coal', hover_name='State')
+print(cancerMerged)
+#figure = px.scatter_geo(cancerMerged, lat='pclat10', lon='pclon10', size='Coal', hover_name='State')
+figure = sp.make_subplots(rows=1, cols=2)
 for plantType in plantTypes:
     figure.add_trace(
         px.scatter(data_frame=cancerMerged,
