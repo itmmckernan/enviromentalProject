@@ -12,7 +12,7 @@ app = dash.Dash(__name__)
 #test for a commit
 
 powerPlants = pd.read_csv(open('./dataFiles/global_power_plant_database.csv', encoding='utf-8'))
-cancerRates = pd.read_csv(open('./dataFiles/incd.csv', encoding='utf-8'))
+cancerRates = pd.read_csv(open('dataFiles/incd_lung.csv', encoding='utf-8'))
 countyCenters = pd.read_csv(open('./dataFiles/county_centers.csv', encoding='utf-8'))
 
 
