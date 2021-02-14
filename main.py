@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import math
 
 app = dash.Dash(__name__)
-#load in the data
+#test for a commit
 
 powerPlants = pd.read_csv(open('./dataFiles/global_power_plant_database.csv', encoding='utf-8'))
 cancerRates = pd.read_csv(open('./dataFiles/incd.csv', encoding='utf-8'))
