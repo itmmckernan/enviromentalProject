@@ -27,7 +27,7 @@ for county in cancerMerged.iterrows():
         coords = [county[1]['pclon10'], county[1]['pclat10']]
     pollutionRateByCounty[county[1]['fips']] = {}
     for plantType in plantTypes:
-        treeResults = subTrees[plantType].query(x=coords, k=5)
+        treeResults = subTrees[plantType].query(x=coords, k=15)
         pollutionRateByCounty[county[1]['fips']][plantType] = 0
         for treeResult in zip(treeResults[0], treeResults[1]):
             if math.isinf(treeResult[0]):
@@ -43,17 +43,13 @@ pollutionRateDataframe['fips'] = pollutionRateDataframe.index
 cancerMerged = cancerRates.merge(pollutionRateDataframe, on="fips")
 print(cancerMerged)
 #figure = px.scatter_geo(cancerMerged, lat='pclat10', lon='pclon10', size='Coal', hover_name='State')
-figure = sp.make_subplots(rows=1, cols=2)
 for plantType in plantTypes:
-    figure.add_trace(
         px.scatter(data_frame=cancerMerged,
                    x=plantType,
                    y='ratePer100k',
                    trendline="ols",
                    color=px.Constant(plantType),
                    title=plantType
-                   )
-    )
+                   ).show()
 
 
-figure.show()
