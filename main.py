@@ -1,8 +1,9 @@
 import pandas as pd
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 import plotly.express as px
 import plotly.subplots as sp
 import math
+import numpy as np
 
 # test for a commit
 
@@ -11,13 +12,13 @@ cancerRates = pd.read_csv(open('dataFiles/incd_all.csv', encoding='utf-8'))
 countyCenters = pd.read_csv(open('./dataFiles/county_centers.csv', encoding='utf-8'))
 
 plantTypes = ['Wind', 'Coal', 'Gas', 'Hydro', 'Oil', 'Biomass', 'Waste']
-cancerMerged = cancerRates.merge(countyCenters, on="fips", how='right')
+cancerMerged = cancerRates.merge(countyCenters, on="fips", how='left')
 pollutionRateByCounty = {}
 subPowerPlants = {}
 subTrees = {}
 for plantType in plantTypes:
     subPowerPlants[plantType] = powerPlants.query("primary_fuel == '{}'".format(plantType))
-    subTrees[plantType] = KDTree(subPowerPlants[plantType][['latitude', 'longitude']].values)
+    subTrees[plantType] = cKDTree(subPowerPlants[plantType][['latitude', 'longitude']].values)
 """
 for county in cancerMerged.iterrows():
     print(county[0])
@@ -40,11 +41,14 @@ cancerMerged['coordLat'] = cancerMerged['pclat10'].combine_first(cancerMerged['p
 
 #query tree
 for plantType in plantTypes:
-    cancerMerged[plantType+'_distances'], cancerMerged[plantType+'_indexes'] = subTrees[plantType].query(x=[cancerMerged['pclon10'], cancerMerged['coordLat']], k=50)
+    cancerMerged[plantType+'Query'] = subTrees[plantType].query_ball_point(x=np.dstack([cancerMerged['pclon10'], cancerMerged['coordLat']]), r=100, workers=-1).transpose()
 #look at points in vecotr magical way
-for plantType in plantTypes:
-    cancerMerged[plantType+'Score'] = sum(subPowerPlants[plantType].values[cancerMerged[plantType+'_indexes']] / cancerMerged[plantType+'_distances'])
 
+for plantType in plantTypes:
+    cancerMerged[plantType+'Score'] = sum(subPowerPlants[plantType].values[cancerMerged[plantType+'Query']] / np.square(cancerMerged[plantType+'Query']))
+    #in order for this to work it needs 2 layers of vectorization and neither numpy nor my brain is having it
+
+#code below is depricated, need to get above code working to know what to change
 pollutionRateDataframe = pd.DataFrame.from_dict(pollutionRateByCounty).transpose()
 pollutionRateDataframe['fips'] = pollutionRateDataframe.index
 fullData = cancerMerged.merge(pollutionRateDataframe, on="fips")
