@@ -18,7 +18,7 @@ subTrees = {}
 for plantType in plantTypes:
     subPowerPlants[plantType] = powerPlants.query("primary_fuel == '{}'".format(plantType))
     subTrees[plantType] = KDTree(subPowerPlants[plantType][['latitude', 'longitude']].values)
-
+"""
 for county in cancerMerged.iterrows():
     print(county[0])
     if math.isnan(county[1]['pclon10']):
@@ -32,37 +32,31 @@ for county in cancerMerged.iterrows():
         for treeResult in zip(treeResults[0], treeResults[1]):
             result = subPowerPlants[plantType].iloc[treeResult[1]]
             pollutionRateByCounty[county[1]['fips']][plantType] += result['capacity_mw'] / math.pow(treeResult[0], 2)
-
+"""
 #make coords
-cancerMerged['coords'] = [cancerMerged['pclon00'], cancerMerged['pclat00']] if math.isnan(cancerMerged['pclat10']) else [cancerMerged['pclon10'], cancerMerged['pclat10']]
+cancerMerged['coordLon'] = cancerMerged['pclon10'].combine_first(cancerMerged['pclon00'])
+cancerMerged['coordLat'] = cancerMerged['pclat10'].combine_first(cancerMerged['pclat00'])
+
+
 #query tree
 for plantType in plantTypes:
-    cancerMerged[plantType+'_tree'] = zip(subTrees[plantType].query(x=cancerMerged['coords'], k=50))
-
+    cancerMerged[plantType+'_distances'], cancerMerged[plantType+'_indexes'] = subTrees[plantType].query(x=[cancerMerged['pclon10'], cancerMerged['coordLat']], k=50)
 #look at points in vecotr magical way
-
+for plantType in plantTypes:
+    cancerMerged[plantType+'Score'] = sum(subPowerPlants[plantType].values[cancerMerged[plantType+'_indexes']] / cancerMerged[plantType+'_distances'])
 
 pollutionRateDataframe = pd.DataFrame.from_dict(pollutionRateByCounty).transpose()
 pollutionRateDataframe['fips'] = pollutionRateDataframe.index
 fullData = cancerMerged.merge(pollutionRateDataframe, on="fips")
 print(fullData)
 
-subplotFigure = sp.make_subplots(rows=6, cols=1)
-subplotFigure.add_trace(
-    px.scatter_geo(fullData, lat='pclat10', lon='pclon10', size='Coal', hover_name='State'),
-    row=1,
-    col=1)
-iterNumber = 1
+
+px.scatter_geo(fullData, lat='pclat10', lon='pclon10', size='Coal', hover_name='State').show()
 for plantType in plantTypes:
-    iterNumber += 1
-    subplotFigure.add_trace(
-        px.scatter(data_frame=fullData,
-                   x=plantType,
-                   y='ratePer100k',
-                   trendline="ols",
-                   color=px.Constant(plantType),
-                   title=plantType,
-                   ),
-        row=iterNumber,
-        col=1
-    )
+    px.scatter(data_frame=fullData,
+               x=plantType+'Score',
+               y='ratePer100k',
+               trendline="ols",
+               color=px.Constant(plantType),
+               title=plantType,
+               ).show()
