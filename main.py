@@ -5,7 +5,6 @@ import plotly.subplots as sp
 import math
 import numpy as np
 
-# test for a commit
 
 powerPlants = pd.read_csv(open('./dataFiles/global_power_plant_database.csv', encoding='utf-8'))
 cancerRates = pd.read_csv(open('dataFiles/incd_all.csv', encoding='utf-8'))
