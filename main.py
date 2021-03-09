@@ -1,10 +1,11 @@
 import pandas as pd
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree, distance
 from sklearn.metrics.pairwise import paired_distances
 import plotly.express as px
 import plotly.subplots as sp
 import math
 import numpy as np
+
 
 
 #load in datasets
@@ -25,30 +26,29 @@ for plantType in plantTypes:
 cancerMerged['coordLon'] = cancerMerged['pclon10'].combine_first(cancerMerged['pclon00'])
 cancerMerged['coordLat'] = cancerMerged['pclat10'].combine_first(cancerMerged['pclat00'])
 #query tree
-
+for plantType in plantTypes:
+    cancerMerged[plantType+'Query'] = subTrees[plantType].query_ball_point(x=np.dstack([cancerMerged['coordLat'], cancerMerged['coordLon']]), r=150, workers=-1).transpose()
 
 def sadnessFunction(plantType, queryPoints, long, lat):
     results = subPowerPlants[plantType].iloc[queryPoints]
     try:
         score = sum(results['capacity_mw']/
-                            paired_distances(
-                                np.asarray([results['latitude'], results['longitude']]).T,
+                            distance.cdist(
+                                [results['latitude'], results['longitude']],
                                 np.repeat(np.asarray([np.asarray([lat, long])]), len(queryPoints), axis=0),
                             )
 
                     )
     except ValueError:
+        print('error')
         return float("NAN")
     return score
-
-for plantType in plantTypes:
-    cancerMerged[plantType+'Query'] = subTrees[plantType].query_ball_point(x=np.dstack([cancerMerged['coordLat'], cancerMerged['coordLon']]), r=150, workers=-1).transpose()
 
 for plantType in plantTypes:
     cancerMerged[plantType+'Score'] = cancerMerged.apply(lambda row: sadnessFunction(plantType, row[plantType+'Query'], row['coordLon'], row['coordLat']), axis=1)
 
 #need to convert to subplots
-px.scatter_geo(cancerMerged, lat='pclat10', lon='pclon10', size='CoalScore', hover_name='State').show()
+#px.scatter_geo(cancerMerged, lat='pclat10', lon='pclon10', size='CoalScore', hover_name='State').show()
 for plantType in plantTypes:
     px.scatter(data_frame=cancerMerged,
                x=plantType+'Score',
