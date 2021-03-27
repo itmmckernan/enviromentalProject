@@ -33,7 +33,7 @@ def sadnessFunction(plantType, queryPoints, long, lat):
     powerPlantLats = results['latitude'].values-lat
     powerPlantLons = results['longitude'].values - long
     powerPlantSizes = results['capacity_mw']
-    score = np.sum(np.sqrt(np.sum([powerPlantLons**2, powerPlantLats**2])))
+    score = np.sum(np.sqrt(np.sum(np.array([powerPlantLons ** 2, powerPlantLats ** 2]).T, axis=1))*powerPlantSizes)
     return score
 
 for plantType in plantTypes:
