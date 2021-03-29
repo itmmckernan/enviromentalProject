@@ -1,4 +1,0 @@
-Cancer Data:https://www.statecancerprofiles.cancer.gov/incidencerates/
-Wind Data:
-County Center Data:
-Global power Plant Database:https://datasets.wri.org/dataset/globalpowerplantdatabase
